@@ -37,6 +37,7 @@ ui <- fluidPage(
     ),
     mainPanel(
       plotOutput("date_plot"),
+      verbatimTextOutput("data_output")  # Output to display collected data
     )
   )
 )
@@ -44,7 +45,7 @@ ui <- fluidPage(
 # Define the server
 server <- function(input, output, session) {
   # Create a reactive value to store the input data
-  data <- reactiveValues(list = NULL)
+  data <- reactiveValues(list = list())  # Initialize as empty list
   
   # Render the interest plot
   output$date_plot <- renderPlot({
@@ -55,8 +56,8 @@ server <- function(input, output, session) {
     if (length(out) > 0) {
       # Create a plot
       plot(colSums(dat_out[, 3:14]), main = "Date Range",
-           xlab = "Date", ylab = "Sum",
-           col = "skyblue")
+           xlab = "Date", ylab = "Sum", ylim = c(0,max(colSums(dat_out[,3:14]+1))),
+           col = "skyblue", type = "l")
     }
   })
   
@@ -97,6 +98,23 @@ server <- function(input, output, session) {
       trailinglines = isolate(input$trailinglines)
     ))
     updateData()  # Update the input fields
+  })
+  
+  # Render the collected data
+  output$data_output <- renderPrint({
+    if (length(data$list) > 0) {
+      cat("Collected Data:\n")
+      for (i in seq_along(data$list)) {
+        cat("Entry", i, "\n")
+        cat("Sample ID:", data$list[[i]]$sample_id, "\n")
+        cat("Vessel Form:", data$list[[i]]$vesselform, "\n")
+        cat("Incising:", data$list[[i]]$incising, "\n")
+        cat("Trailing Lines:", data$list[[i]]$trailinglines, "\n")
+        cat("\n")
+      }
+    } else {
+      cat("No data collected yet.")
+    }
   })
 }
 
